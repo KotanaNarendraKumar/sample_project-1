@@ -1,0 +1,83 @@
+k8sKubeconfig: ""
+
+replicaCount: 1
+
+sentinelTagG: &sentinelTagG "build_tag"
+
+image:
+  registry: gto-ecx-docker-dev-local.usw2.packages.broadcom.com/telemetry/sentinelv2-service/qat
+  repository: sentinel-v2
+  tag: *sentinelTagG
+  pullPolicy: Always
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 5s
+    honorLabels: false
+    scheme: http
+
+monitoring:
+  delayMillis: 10000
+  initialDelayMillis: 10000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1000Mi
+  requests:
+    cpu: 500m
+    memory: 1000Mi
+
+fluentd:
+  enabled: false
+
+imagePullSecrets: []
+nameOverride: "tel-sentinel-v2-service"
+fullnameOverride: "tel-sentinel-v2-service"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+rbac:
+  create: true
+  clusterWideAccess: false
+  serviceAccount:
+    annotations: {}
+    name: "tel-sentinel-v2-service"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+kafka:
+  topicPrefix: "ph_devprd"
+  kafkaBrokers: "tel-kafka-kafka-bootstrap.gto-operators.svc.cluster.local:9092"
+
+ics:
+  definition: "devprd"
+  icsUrl: "https://ingestsvc-dev.broadcom.net"
+  apiKey: ""
+  graphiteHost: ""
+  metricsHost: ""
+
+etlmonitor:
+  namespace: monitoring
