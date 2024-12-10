@@ -1,0 +1,76 @@
+replicaCount: 1
+
+environmentName: "dev"
+namespace: gto-tele-ingest-dev
+profile: "dev"
+
+image:
+  repository: gto-ecx-docker-dev-local.usw2.packages.broadcom.com/ics/qat/ics
+  tag: "build_tag"
+  pullPolicy: Always
+
+serviceAccount:
+  name: tel-ingestion-control-service
+
+resources:
+  limits:
+    cpu: "2"
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 500Mi
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+service:
+  type: ClusterIP
+  port:
+    app:
+      name: ingestion-control-service
+      value: 8080
+    metrics:
+      name: metrics
+      value: 10241
+  externalHostName: null
+
+container:
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  livenessProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 10
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /actuator/health
+      port: 8080
+      scheme: HTTP
+    initialDelaySeconds: 40
+    periodSeconds: 40
+    successThreshold: 1
+    timeoutSeconds: 1
+
+jdbc:
+  url: "jdbc:postgresql://telemetry-db-pgbouncer.gto-tele-db-verify.svc.cluster.local:5432/telemetry?prepareThreshold=0"
+  user: "postgres"
+  password: "E3T<;lBOfuGk-v49Yx@c2:mK"
+  secretName: "ingestion-control-service-jdbc"
+
+volumes:
+  - name: secrets
+    secret:
+      secretName: tel-ingestion-control-service
+  - name: ics-k8s-config-volume
+    secret:
+      secretName: ics-k8s-config
+      optional: true
